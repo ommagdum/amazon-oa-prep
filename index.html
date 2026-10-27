@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon OA Prep — LeetCode Tracker</title>
+  <meta name="description" content="Hyper-optimized Amazon OA LeetCode preparation tracker with progress tracking, filtering, and sorting." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg-base:       #0a0e1a;
+      --bg-card:       #111827;
+      --bg-elevated:   #1a2236;
+      --bg-hover:      #1e2d44;
+      --border:        #1e2d44;
+      --border-bright: #2d4060;
+
+      --accent-primary: #6366f1;
+      --accent-glow:    #6366f140;
+      --accent-hover:   #818cf8;
+      --accent-orange:  #f97316;
+      --accent-green:   #22c55e;
+      --accent-red:     #ef4444;
+      --accent-yellow:  #eab308;
+
+      --text-primary:   #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted:     #4b5563;
+      --text-accent:    #818cf8;
+
+      --diff-easy:   #22c55e;
+      --diff-medium: #f59e0b;
+      --diff-hard:   #ef4444;
+
+      --radius-sm:  6px;
+      --radius-md:  10px;
+      --radius-lg:  16px;
+      --radius-xl:  24px;
+
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-glow: 0 0 30px rgba(99,102,241,0.15);
+
+      --sidebar-w: 320px;
+      --topbar-h:  64px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+    input, select { font-family: inherit; outline: none; border: none; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+    /* ═══════════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════════ */
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* TOP BAR */
+    #topbar {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--topbar-h);
+      background: rgba(10,14,26,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 20px;
+    }
+    #topbar .brand {
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    #topbar .brand .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: white;
+      box-shadow: 0 0 20px #6366f133;
+    }
+    #topbar .brand h1 {
+      font-size: 1.15rem; font-weight: 700;
+      background: linear-gradient(90deg, #f1f5f9, #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    #topbar .brand span {
+      font-size: 0.7rem; font-weight: 500;
+      background: var(--accent-orange);
+      color: white; border-radius: 4px;
+      padding: 2px 7px; margin-left: 4px;
+      -webkit-text-fill-color: white;
+    }
+
+    #search-wrap {
+      flex: 1; max-width: 480px;
+      position: relative;
+    }
+    #search-wrap svg {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+    #search-input {
+      width: 100%; height: 40px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      padding: 0 14px 0 38px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    #search-input::placeholder { color: var(--text-muted); }
+
+    .topbar-stats {
+      display: flex; gap: 16px; align-items: center; margin-left: auto;
+      flex-shrink: 0;
+    }
+    .topbar-stat {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1px;
+    }
+    .topbar-stat .val {
+      font-size: 1rem; font-weight: 700; color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .topbar-stat .lbl {
+      font-size: 0.65rem; color: var(--text-secondary); font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .stat-divider { width: 1px; height: 32px; background: var(--border-bright); }
+
+    #sidebar-toggle {
+      display: none;
+      background: var(--bg-elevated); border: 1px solid var(--border-bright);
+      border-radius: var(--radius-md); padding: 8px; color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    #sidebar-toggle:hover { color: var(--text-primary); border-color: var(--accent-primary); }
+
+    /* MAIN BODY */
+    #main-body {
+      display: flex; flex: 1; overflow: hidden;
+      height: calc(100vh - var(--topbar-h));
+      position: relative;
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .sidebar-section {
+      padding: 20px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-section:last-child { border-bottom: none; }
+    .sidebar-section h2 {
+      font-size: 0.7rem; font-weight: 700;
+      color: var(--text-secondary); text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 14px;
+    }
+
+    /* Overall progress ring */
+    .progress-ring-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; padding: 8px 0;
+    }
+    .ring-container {
+      position: relative; width: 120px; height: 120px;
+    }
+    .ring-container svg { transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: var(--border-bright); stroke-width: 8; }
+    .ring-fill {
+      fill: none; stroke-width: 8;
+      stroke: url(#ringGrad);
+      stroke-linecap: round;
+      stroke-dasharray: 339.3;
+      stroke-dashoffset: 339.3;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    .ring-label {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ring-label .pct {
+      font-size: 1.5rem; font-weight: 800;
+      background: linear-gradient(135deg, #818cf8, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ring-label .done-of {
+      font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;
+    }
+    .diff-pills {
+      display: flex; gap: 8px; justify-content: center;
+    }
+    .diff-pill {
+      display: flex; flex-direction: column; align-items: center;
+      background: var(--bg-elevated); border-radius: var(--radius-md);
+      padding: 6px 10px; gap: 2px; min-width: 56px;
+    }
+    .diff-pill .count { font-size: 1rem; font-weight: 700; }
+    .diff-pill .name { font-size: 0.6rem; color: var(--text-secondary); font-weight: 500; }
+    .diff-pill.easy .count { color: var(--diff-easy); }
+    .diff-pill.medium .count { color: var(--diff-medium); }
+    .diff-pill.hard .count { color: var(--diff-hard); }
+
+    /* Topic progress list */
+    .topic-list { display: flex; flex-direction: column; gap: 8px; }
+    .topic-row {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .topic-row-header {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .topic-row-header .tname {
+      font-size: 0.8rem; font-weight: 500; color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+    }
+    .topic-row-header .tcount {
+      font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; flex-shrink: 0;
+    }
+    .topic-bar-bg {
+      height: 4px; background: var(--border-bright); border-radius: 99px; overflow: hidden;
+    }
+    .topic-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #6366f1, #a78bfa);
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Filters */
+    .filter-group { display: flex; flex-direction: column; gap: 8px; }
+    .filter-label {
+      font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .filter-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .chip {
+      padding: 4px 10px; border-radius: 99px;
+      border: 1px solid var(--border-bright);
+      font-size: 0.75rem; font-weight: 500; color: var(--text-secondary);
+      background: var(--bg-elevated);
+      cursor: pointer; transition: all 0.15s;
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+    .chip.active {
+      background: var(--accent-primary); border-color: var(--accent-primary);
+      color: white; box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .chip.easy.active { background: var(--diff-easy); border-color: var(--diff-easy); box-shadow: 0 0 12px #22c55e33; }
+    .chip.medium.active { background: var(--diff-medium); border-color: var(--diff-medium); box-shadow: 0 0 12px #f59e0b33; }
+    .chip.hard.active { background: var(--diff-hard); border-color: var(--diff-hard); box-shadow: 0 0 12px #ef444433; }
+
+    .select-wrap {
+      position: relative;
+    }
+    .select-wrap svg {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--text-secondary); pointer-events: none;
+    }
+    .custom-select {
+      width: 100%; height: 36px; padding: 0 32px 0 12px;
+      background: var(--bg-elevated); border: 1px solid var(--border-bright);
+      border-radius: var(--radius-md); color: var(--text-primary);
+      font-size: 0.8rem; appearance: none;
+      cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .custom-select:focus {
+      border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .custom-select option { background: var(--bg-elevated); color: var(--text-primary); }
+
+    .sidebar-actions {
+      display: flex; gap: 8px; padding: 14px 18px;
+    }
+    .btn {
+      flex: 1; height: 34px; border-radius: var(--radius-md);
+      font-size: 0.78rem; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; box-shadow: 0 4px 12px #6366f133;
+    }
+    .btn-primary:hover { box-shadow: 0 6px 20px #6366f144; transform: translateY(-1px); }
+    .btn-ghost {
+      background: var(--bg-elevated); border: 1px solid var(--border-bright);
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { color: var(--text-primary); border-color: var(--accent-primary); }
+
+    /* CONTENT AREA */
+    #content { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+    /* CONTROLS BAR */
+    #controls-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      position: sticky; top: 0; z-index: 10;
+    }
+    #results-count {
+      font-size: 0.82rem; color: var(--text-secondary);
+      font-weight: 500; flex-shrink: 0;
+    }
+    #results-count strong { color: var(--text-primary); }
+
+    .sort-tabs { display: flex; gap: 4px; margin-left: auto; }
+    .sort-tab {
+      padding: 5px 12px; border-radius: var(--radius-sm);
+      font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+      background: transparent; border: 1px solid transparent;
+      transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+    }
+    .sort-tab:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .sort-tab.active {
+      color: var(--accent-hover); background: var(--bg-elevated);
+      border-color: var(--border-bright);
+    }
+    .sort-tab .arrow { font-size: 0.6rem; }
+
+    #view-toggle {
+      display: flex; gap: 4px; background: var(--bg-elevated);
+      border: 1px solid var(--border-bright); border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .view-btn {
+      padding: 4px 8px; border-radius: 4px;
+      color: var(--text-secondary); background: transparent;
+      transition: all 0.15s; font-size: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .view-btn.active { background: var(--bg-hover); color: var(--text-primary); }
+    .view-btn:hover { color: var(--text-primary); }
+
+    /* QUESTION TABLE */
+    #question-list { padding: 8px 12px 80px; }
+
+    .q-table {
+      width: 100%; border-collapse: separate; border-spacing: 0 6px;
+    }
+    .q-table thead th {
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em;
+      font-weight: 700; color: var(--text-muted); padding: 4px 12px 8px;
+      text-align: left;
+    }
+    .q-table thead th:first-child { width: 42px; }
+    .q-table thead th.col-id { width: 60px; }
+    .q-table thead th.col-freq { width: 100px; }
+    .q-table thead th.col-diff { width: 80px; }
+    .q-table thead th.col-acc { width: 80px; }
+    .q-table thead th.col-time { width: 100px; }
+
+    .q-row {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .q-row:hover {
+      background: var(--bg-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .q-row.solved { opacity: 0.6; }
+    .q-row.solved .q-title { text-decoration: line-through; color: var(--text-muted); }
+
+    .q-row td {
+      padding: 11px 12px; vertical-align: middle;
+    }
+    .q-row td:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); padding-left: 14px; }
+    .q-row td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; padding-right: 14px; }
+
+    /* Checkbox */
+    .q-check {
+      width: 20px; height: 20px; border-radius: 6px;
+      border: 2px solid var(--border-bright);
+      background: var(--bg-elevated);
+      cursor: pointer; appearance: none;
+      display: flex; flex-shrink: 0;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .q-check:checked {
+      background: var(--accent-primary); border-color: var(--accent-primary);
+    }
+    .q-check:checked::after {
+      content: '';
+      position: absolute; top: 2px; left: 5px;
+      width: 6px; height: 10px;
+      border: 2px solid white; border-top: none; border-left: none;
+      transform: rotate(45deg);
+    }
+    .q-check:hover:not(:checked) {
+      border-color: var(--accent-primary); background: var(--accent-glow);
+    }
+
+    /* ID */
+    .q-id {
+      font-size: 0.75rem; color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Title */
+    .q-title-cell { max-width: 340px; }
+    .q-title {
+      font-size: 0.9rem; font-weight: 600; color: var(--text-primary);
+      display: block; margin-bottom: 3px;
+      transition: color 0.15s;
+    }
+    .q-title-link:hover .q-title { color: var(--text-accent); }
+    .q-topics { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .q-topic {
+      font-size: 0.65rem; font-weight: 500;
+      padding: 2px 7px; border-radius: 99px;
+      background: var(--bg-elevated); color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* Frequency bar */
+    .freq-cell { min-width: 100px; }
+    .freq-bar-wrap {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .freq-bar-bg {
+      flex: 1; height: 5px; background: var(--border-bright);
+      border-radius: 99px; overflow: hidden;
+    }
+    .freq-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #6366f1, #a78bfa);
+    }
+    .freq-val {
+      font-size: 0.72rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary); width: 38px; text-align: right; flex-shrink: 0;
+    }
+
+    /* Difficulty badge */
+    .diff-badge {
+      display: inline-flex; align-items: center;
+      font-size: 0.72rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 99px;
+    }
+    .diff-badge.Easy   { color: var(--diff-easy);   background: #22c55e15; border: 1px solid #22c55e30; }
+    .diff-badge.Medium { color: var(--diff-medium); background: #f59e0b15; border: 1px solid #f59e0b30; }
+    .diff-badge.Hard   { color: var(--diff-hard);   background: #ef444415; border: 1px solid #ef444430; }
+
+    /* Acceptance */
+    .acc-val {
+      font-size: 0.8rem; color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace; font-weight: 500;
+    }
+
+    /* Timeframe badge */
+    .tf-badge {
+      font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 99px;
+      border: 1px solid;
+    }
+    .tf-30d  { color: #22c55e; background: #22c55e10; border-color: #22c55e30; }
+    .tf-3m   { color: #6366f1; background: #6366f110; border-color: #6366f130; }
+    .tf-6m   { color: #f97316; background: #f9731610; border-color: #f9731630; }
+    .tf-more { color: var(--text-muted); background: transparent; border-color: var(--border); }
+    .tf-all  { color: var(--text-muted); background: transparent; border-color: var(--border); }
+
+    /* CARD VIEW */
+    #card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      padding: 12px 16px 80px;
+    }
+    .q-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .q-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #6366f1, #a78bfa);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .q-card:hover { border-color: var(--border-bright); transform: translateY(-2px); box-shadow: var(--shadow-card); }
+    .q-card:hover::before { opacity: 1; }
+    .q-card.solved { opacity: 0.55; }
+    .q-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .q-card-title { font-size: 0.88rem; font-weight: 600; line-height: 1.4; }
+    .q-card.solved .q-card-title { text-decoration: line-through; color: var(--text-muted); }
+    .q-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .q-card-meta { display: flex; align-items: center; gap: 8px; }
+
+    /* EMPTY STATE */
+    #empty-state {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; padding: 80px 24px; text-align: center;
+    }
+    #empty-state svg { color: var(--text-muted); }
+    #empty-state h3 { font-size: 1.1rem; color: var(--text-secondary); font-weight: 600; }
+    #empty-state p { font-size: 0.85rem; color: var(--text-muted); max-width: 300px; line-height: 1.6; }
+    #empty-state button {
+      padding: 8px 20px; border-radius: var(--radius-md);
+      background: var(--bg-elevated); border: 1px solid var(--border-bright);
+      color: var(--text-secondary); font-size: 0.82rem; font-weight: 600;
+      transition: all 0.2s;
+    }
+    #empty-state button:hover { color: var(--text-primary); border-color: var(--accent-primary); }
+
+    /* LOADING */
+    #loader {
+      display: flex; align-items: center; justify-content: center;
+      padding: 80px; gap: 12px; color: var(--text-secondary); font-size: 0.9rem;
+    }
+    .spinner {
+      width: 24px; height: 24px; border: 3px solid var(--border-bright);
+      border-top-color: var(--accent-primary); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* TOAST */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+      background: var(--bg-elevated); border: 1px solid var(--border-bright);
+      border-radius: var(--radius-md); padding: 12px 18px;
+      font-size: 0.82rem; font-weight: 600; color: var(--text-primary);
+      box-shadow: var(--shadow-card);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      display: flex; align-items: center; gap: 8px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* OVERLAY for mobile sidebar */
+    #sidebar-overlay {
+      display: none; position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .q-row, .q-card {
+      animation: fadeInUp 0.2s ease both;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 960px) {
+      :root { --sidebar-w: 280px; }
+      #sidebar-toggle { display: flex; }
+      #sidebar {
+        position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
+        z-index: 60; transform: translateX(-100%);
+      }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-overlay.show { display: block; }
+      .topbar-stats { display: none; }
+    }
+    @media (max-width: 640px) {
+      #topbar { padding: 0 14px; gap: 12px; }
+      #controls-bar { flex-wrap: wrap; gap: 8px; }
+      .sort-tabs { width: 100%; overflow-x: auto; }
+      .col-acc, .col-time { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <header id="topbar">
+    <button id="sidebar-toggle" aria-label="Toggle sidebar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="brand">
+      <div class="logo">A</div>
+      <h1>Amazon OA Prep <span>2025</span></h1>
+    </div>
+
+    <div id="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Search questions…" autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div class="topbar-stats">
+      <div class="topbar-stat">
+        <span class="val" id="stat-solved">0</span>
+        <span class="lbl">Solved</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="topbar-stat">
+        <span class="val" id="stat-total">0</span>
+        <span class="lbl">Total</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="topbar-stat">
+        <span class="val" id="stat-pct">0%</span>
+        <span class="lbl">Done</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="main-body">
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+
+      <!-- Overall Progress -->
+      <div class="sidebar-section">
+        <h2>Overall Progress</h2>
+        <div class="progress-ring-wrap">
+          <div class="ring-container">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#a78bfa"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="60" cy="60" r="54"/>
+              <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="54"/>
+            </svg>
+            <div class="ring-label">
+              <span class="pct" id="ring-pct">0%</span>
+              <span class="done-of" id="ring-doneof">0 / 0</span>
+            </div>
+          </div>
+          <div class="diff-pills">
+            <div class="diff-pill easy"><span class="count" id="dp-easy">0</span><span class="name">Easy</span></div>
+            <div class="diff-pill medium"><span class="count" id="dp-med">0</span><span class="name">Med</span></div>
+            <div class="diff-pill hard"><span class="count" id="dp-hard">0</span><span class="name">Hard</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="sidebar-section">
+        <h2>Filters</h2>
+        <div class="filter-group">
+          <span class="filter-label">Difficulty</span>
+          <div class="filter-chips" id="diff-chips">
+            <span class="chip easy" data-diff="Easy">Easy</span>
+            <span class="chip medium" data-diff="Medium">Medium</span>
+            <span class="chip hard" data-diff="Hard">Hard</span>
+          </div>
+
+          <span class="filter-label" style="margin-top:10px">Recency</span>
+          <div class="filter-chips" id="time-chips">
+            <span class="chip" data-tf="30_days">30 days</span>
+            <span class="chip" data-tf="3_months">3 months</span>
+            <span class="chip" data-tf="6_months">6 months</span>
+            <span class="chip" data-tf="more_than_6m">&gt;6 months</span>
+          </div>
+
+          <span class="filter-label" style="margin-top:10px">Status</span>
+          <div class="filter-chips" id="status-chips">
+            <span class="chip" data-status="todo">To Do</span>
+            <span class="chip" data-status="solved">Solved</span>
+          </div>
+
+          <span class="filter-label" style="margin-top:10px">Topic</span>
+          <div class="select-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <select id="topic-select" class="custom-select">
+              <option value="">All Topics</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="sidebar-actions">
+        <button class="btn btn-ghost" id="btn-clear-filters">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Clear
+        </button>
+        <button class="btn btn-ghost" id="btn-export">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+
+      <!-- Topic Progress -->
+      <div class="sidebar-section">
+        <h2>Topic Progress</h2>
+        <div class="topic-list" id="topic-progress-list"></div>
+      </div>
+
+    </aside>
+
+    <!-- CONTENT -->
+    <main id="content">
+
+      <!-- Controls Bar -->
+      <div id="controls-bar">
+        <span id="results-count"><strong>0</strong> questions</span>
+
+        <div class="sort-tabs" id="sort-tabs">
+          <button class="sort-tab active" data-sort="frequency" id="sort-freq">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            Frequency <span class="arrow" id="arrow-freq">↓</span>
+          </button>
+          <button class="sort-tab" data-sort="difficulty" id="sort-diff">
+            Difficulty <span class="arrow" id="arrow-diff">↓</span>
+          </button>
+          <button class="sort-tab" data-sort="id" id="sort-id">
+            ID <span class="arrow" id="arrow-id">↑</span>
+          </button>
+          <button class="sort-tab" data-sort="acceptance" id="sort-acc">
+            Acceptance <span class="arrow" id="arrow-acc">↓</span>
+          </button>
+        </div>
+
+        <div id="view-toggle">
+          <button class="view-btn active" id="view-table" title="Table view">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+          </button>
+          <button class="view-btn" id="view-cards" title="Card view">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div id="loader"><div class="spinner"></div> Loading questions…</div>
+
+      <!-- Table View -->
+      <div id="question-list" style="display:none">
+        <table class="q-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="col-id">#</th>
+              <th>Title</th>
+              <th class="col-freq">Frequency</th>
+              <th class="col-diff">Difficulty</th>
+              <th class="col-acc">Acceptance</th>
+              <th class="col-time">Recency</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div id="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <h3>No questions found</h3>
+          <p>Try adjusting your search terms or clearing some filters.</p>
+          <button id="empty-clear-btn">Clear all filters</button>
+        </div>
+      </div>
+
+      <!-- Card View -->
+      <div id="card-grid" style="display:none"></div>
+
+    </main>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" role="alert"></div>
+
+<script src="questions.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   AMAZON OA PREP — MAIN APPLICATION JS
+   ════════════════════════════════════════════════════════════ */
+
+// ── Constants ──────────────────────────────────────────────────
+const LS_KEY   = 'amazon-oa-solved-v2';
+const PAGE_SIZE = 80;  // virtual scroll batch size
+
+// ── State ──────────────────────────────────────────────────────
+const state = {
+  solvedSet: new Set(),
+  filters: { difficulties: new Set(), timeframes: new Set(), statuses: new Set(), topic: '' },
+  sort: { by: 'frequency', dir: 'desc' },
+  search: '',
+  view: 'table',   // 'table' | 'cards'
+  visibleCount: PAGE_SIZE,
+  filtered: [],
+};
+
+// ── DOM refs ──────────────────────────────────────────────────
+const dom = {
+  loader:        document.getElementById('loader'),
+  tableWrap:     document.getElementById('question-list'),
+  tbody:         document.getElementById('table-body'),
+  cardGrid:      document.getElementById('card-grid'),
+  emptyState:    document.getElementById('empty-state'),
+  resultsCount:  document.getElementById('results-count'),
+  searchInput:   document.getElementById('search-input'),
+  topicSelect:   document.getElementById('topic-select'),
+  ringFill:      document.getElementById('ring-fill'),
+  ringPct:       document.getElementById('ring-pct'),
+  ringDoneOf:    document.getElementById('ring-doneof'),
+  statSolved:    document.getElementById('stat-solved'),
+  statTotal:     document.getElementById('stat-total'),
+  statPct:       document.getElementById('stat-pct'),
+  dpEasy:        document.getElementById('dp-easy'),
+  dpMed:         document.getElementById('dp-med'),
+  dpHard:        document.getElementById('dp-hard'),
+  topicList:     document.getElementById('topic-progress-list'),
+  toast:         document.getElementById('toast'),
+  sidebar:       document.getElementById('sidebar'),
+  sidebarOverlay:document.getElementById('sidebar-overlay'),
+};
+
+// ── localStorage helpers ──────────────────────────────────────
+function loadSolved() {
+  try { return new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function saveSolved() {
+  localStorage.setItem(LS_KEY, JSON.stringify([...state.solvedSet]));
+}
+
+// ── Utility ────────────────────────────────────────────────────
+function showToast(msg, emoji = '✅') {
+  dom.toast.innerHTML = `<span>${emoji}</span> ${msg}`;
+  dom.toast.classList.add('show');
+  clearTimeout(dom.toast._t);
+  dom.toast._t = setTimeout(() => dom.toast.classList.remove('show'), 2200);
+}
+
+function timeframeLabel(tf) {
+  const map = { '30_days': '30d', '3_months': '3mo', '6_months': '6mo', 'more_than_6m': '>6mo', 'all': 'all' };
+  return map[tf] || tf;
+}
+function timeframeCls(tf) {
+  const map = { '30_days': 'tf-30d', '3_months': 'tf-3m', '6_months': 'tf-6m', 'more_than_6m': 'tf-more', 'all': 'tf-all' };
+  return map[tf] || 'tf-all';
+}
+
+// ── Filter & Sort ─────────────────────────────────────────────
+function applyFiltersAndSort() {
+  const q = state.search.toLowerCase();
+  const { difficulties, timeframes, statuses, topic } = state.filters;
+  const { by, dir } = state.sort;
+
+  let result = QUESTIONS.filter(item => {
+    if (q && !item.title.toLowerCase().includes(q) && !item.topics.some(t => t.toLowerCase().includes(q))) return false;
+    if (difficulties.size && !difficulties.has(item.difficulty)) return false;
+    if (timeframes.size && !timeframes.has(item.timeframe)) return false;
+    if (topic && !item.topics.includes(topic)) return false;
+    const isSolved = state.solvedSet.has(item.slug);
+    if (statuses.size === 1) {
+      if (statuses.has('solved') && !isSolved) return false;
+      if (statuses.has('todo') && isSolved) return false;
+    }
+    return true;
+  });
+
+  const diffOrder = { Easy: 0, Medium: 1, Hard: 2 };
+  result.sort((a, b) => {
+    let cmp = 0;
+    if (by === 'frequency')   cmp = b.frequency - a.frequency;
+    else if (by === 'difficulty') cmp = diffOrder[a.difficulty] - diffOrder[b.difficulty];
+    else if (by === 'id')     cmp = (a.id || 99999) - (b.id || 99999);
+    else if (by === 'acceptance') cmp = b.acceptance - a.acceptance;
+    return dir === 'desc' ? cmp : -cmp;
+  });
+
+  state.filtered = result;
+  state.visibleCount = PAGE_SIZE;
+  renderList();
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function renderList() {
+  const visible = state.filtered.slice(0, state.visibleCount);
+
+  dom.resultsCount.innerHTML = `<strong>${state.filtered.length.toLocaleString()}</strong> questions`;
+
+  if (state.view === 'table') {
+    dom.tableWrap.style.display = '';
+    dom.cardGrid.style.display = 'none';
+    renderTable(visible);
+  } else {
+    dom.tableWrap.style.display = 'none';
+    dom.cardGrid.style.display = '';
+    renderCards(visible);
+  }
+
+  // Empty state
+  const isEmpty = state.filtered.length === 0;
+  dom.emptyState.style.display = isEmpty ? 'flex' : 'none';
+  dom.tbody && (dom.tbody.style.display = isEmpty ? 'none' : '');
+}
+
+function renderTable(items) {
+  dom.tbody.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  items.forEach((q, i) => {
+    const solved = state.solvedSet.has(q.slug);
+    const tr = document.createElement('tr');
+    tr.className = 'q-row' + (solved ? ' solved' : '');
+    tr.style.animationDelay = `${Math.min(i * 8, 200)}ms`;
+    tr.dataset.slug = q.slug;
+
+    const topicsHtml = q.topics.slice(0, 3).map(t =>
+      `<span class="q-topic">${escHtml(t)}</span>`
+    ).join('');
+
+    const freqPct = Math.min(q.frequency, 100);
+
+    tr.innerHTML = `
+      <td><input type="checkbox" class="q-check" ${solved ? 'checked' : ''} aria-label="Mark ${escHtml(q.title)} as solved" /></td>
+      <td><span class="q-id">${q.id || '—'}</span></td>
+      <td class="q-title-cell">
+        <a class="q-title-link" href="${escHtml(q.url)}" target="_blank" rel="noopener">
+          <span class="q-title">${escHtml(q.title)}</span>
+        </a>
+        <div class="q-topics">${topicsHtml}</div>
+      </td>
+      <td class="freq-cell">
+        <div class="freq-bar-wrap">
+          <div class="freq-bar-bg"><div class="freq-bar-fill" style="width:${freqPct}%"></div></div>
+          <span class="freq-val">${q.frequency.toFixed(1)}%</span>
+        </div>
+      </td>
+      <td><span class="diff-badge ${escHtml(q.difficulty)}">${escHtml(q.difficulty)}</span></td>
+      <td><span class="acc-val">${q.acceptance > 0 ? q.acceptance.toFixed(1) + '%' : '—'}</span></td>
+      <td><span class="tf-badge ${timeframeCls(q.timeframe)}">${timeframeLabel(q.timeframe)}</span></td>
+    `;
+    frag.appendChild(tr);
+  });
+  dom.tbody.appendChild(frag);
+  attachCheckboxListeners(dom.tbody);
+
+  // Infinite scroll sentinel
+  if (state.filtered.length > state.visibleCount) {
+    const sentinel = document.createElement('tr');
+    sentinel.id = 'scroll-sentinel';
+    sentinel.innerHTML = `<td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">Loading more…</td>`;
+    dom.tbody.appendChild(sentinel);
+    observeSentinel(sentinel);
+  }
+}
+
+function renderCards(items) {
+  dom.cardGrid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  items.forEach((q, i) => {
+    const solved = state.solvedSet.has(q.slug);
+    const div = document.createElement('div');
+    div.className = 'q-card' + (solved ? ' solved' : '');
+    div.style.animationDelay = `${Math.min(i * 6, 200)}ms`;
+    div.dataset.slug = q.slug;
+    div.innerHTML = `
+      <div class="q-card-header">
+        <a href="${escHtml(q.url)}" target="_blank" rel="noopener" style="flex:1">
+          <div class="q-card-title">${escHtml(q.title)}</div>
+        </a>
+        <input type="checkbox" class="q-check" ${solved ? 'checked' : ''} aria-label="Mark as solved" />
+      </div>
+      <div class="q-topics">
+        ${q.topics.slice(0, 3).map(t => `<span class="q-topic">${escHtml(t)}</span>`).join('')}
+      </div>
+      <div class="q-card-footer">
+        <div class="q-card-meta">
+          <span class="diff-badge ${escHtml(q.difficulty)}">${escHtml(q.difficulty)}</span>
+          <span class="tf-badge ${timeframeCls(q.timeframe)}">${timeframeLabel(q.timeframe)}</span>
+        </div>
+        <div class="freq-bar-wrap" style="width:80px">
+          <div class="freq-bar-bg" style="flex:1"><div class="freq-bar-fill" style="width:${Math.min(q.frequency,100)}%"></div></div>
+          <span class="freq-val">${q.frequency.toFixed(0)}%</span>
+        </div>
+      </div>
+    `;
+    frag.appendChild(div);
+  });
+  dom.cardGrid.appendChild(frag);
+  attachCheckboxListeners(dom.cardGrid);
+
+  if (state.filtered.length > state.visibleCount) {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'scroll-sentinel';
+    sentinel.style.cssText = 'text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem;grid-column:1/-1';
+    sentinel.textContent = 'Loading more…';
+    dom.cardGrid.appendChild(sentinel);
+    observeSentinel(sentinel);
+  }
+}
+
+// ── Infinite scroll ───────────────────────────────────────────
+let _io = null;
+function observeSentinel(el) {
+  if (_io) _io.disconnect();
+  _io = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      state.visibleCount += PAGE_SIZE;
+      renderList();
+    }
+  }, { rootMargin: '200px' });
+  _io.observe(el);
+}
+
+// ── Checkbox delegation ───────────────────────────────────────
+function attachCheckboxListeners(container) {
+  container.addEventListener('change', e => {
+    if (!e.target.classList.contains('q-check')) return;
+    const row = e.target.closest('[data-slug]');
+    if (!row) return;
+    const slug = row.dataset.slug;
+    if (e.target.checked) {
+      state.solvedSet.add(slug);
+      row.classList.add('solved');
+    } else {
+      state.solvedSet.delete(slug);
+      row.classList.remove('solved');
+    }
+    saveSolved();
+    updateDashboard();
+    showToast(e.target.checked ? 'Marked as solved!' : 'Unmarked', e.target.checked ? '✅' : '↩️');
+  }, { capture: false });
+}
+
+// ── Dashboard / Progress ──────────────────────────────────────
+function updateDashboard() {
+  const total  = QUESTIONS.length;
+  const solved = state.solvedSet.size;
+  const pct    = total ? Math.round((solved / total) * 100) : 0;
+
+  // Ring
+  const circumference = 2 * Math.PI * 54; // r=54
+  const offset = circumference - (pct / 100) * circumference;
+  dom.ringFill.style.strokeDashoffset = offset;
+  dom.ringPct.textContent   = pct + '%';
+  dom.ringDoneOf.textContent = `${solved} / ${total}`;
+
+  // Topbar stats
+  dom.statSolved.textContent = solved;
+  dom.statTotal.textContent  = total;
+  dom.statPct.textContent    = pct + '%';
+
+  // Diff pills
+  let e = 0, m = 0, h = 0;
+  for (const slug of state.solvedSet) {
+    const q = QUESTIONS.find(x => x.slug === slug);
+    if (!q) continue;
+    if (q.difficulty === 'Easy') e++;
+    else if (q.difficulty === 'Medium') m++;
+    else h++;
+  }
+  dom.dpEasy.textContent = e;
+  dom.dpMed.textContent  = m;
+  dom.dpHard.textContent = h;
+
+  // Topic progress
+  renderTopicProgress();
+}
+
+function renderTopicProgress() {
+  // Build topic -> { total, solved }
+  const topicMap = {};
+  for (const q of QUESTIONS) {
+    for (const t of q.topics) {
+      if (!topicMap[t]) topicMap[t] = { total: 0, solved: 0 };
+      topicMap[t].total++;
+      if (state.solvedSet.has(q.slug)) topicMap[t].solved++;
+    }
+  }
+
+  // Sort by solved desc, then total desc — show top topics with most solved first, then others
+  const topics = Object.entries(topicMap)
+    .filter(([, v]) => v.total >= 3) // only meaningful topics
+    .sort((a, b) => b[1].solved - a[1].solved || b[1].total - a[1].total)
+    .slice(0, 20);
+
+  dom.topicList.innerHTML = '';
+  for (const [name, { total, solved }] of topics) {
+    const pct = Math.round((solved / total) * 100);
+    const div = document.createElement('div');
+    div.className = 'topic-row';
+    div.innerHTML = `
+      <div class="topic-row-header">
+        <span class="tname">${escHtml(name)}</span>
+        <span class="tcount">${solved}/${total}</span>
+      </div>
+      <div class="topic-bar-bg">
+        <div class="topic-bar-fill" style="width:${pct}%"></div>
+      </div>
+    `;
+    dom.topicList.appendChild(div);
+  }
+}
+
+// ── Populate topic select ─────────────────────────────────────
+function populateTopicSelect() {
+  ALL_TOPICS.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    dom.topicSelect.appendChild(opt);
+  });
+}
+
+// ── Sort ──────────────────────────────────────────────────────
+function setSort(by) {
+  if (state.sort.by === by) {
+    state.sort.dir = state.sort.dir === 'desc' ? 'asc' : 'desc';
+  } else {
+    state.sort.by = by;
+    state.sort.dir = 'desc';
+  }
+  updateSortUI();
+  applyFiltersAndSort();
+}
+
+function updateSortUI() {
+  document.querySelectorAll('.sort-tab').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById('sort-' + state.sort.by.slice(0, 4));
+  if (activeBtn) activeBtn.classList.add('active');
+  // Update arrows
+  ['freq', 'diff', 'id', 'acc'].forEach(k => {
+    const el = document.getElementById('arrow-' + k);
+    if (el) el.textContent = state.sort.dir === 'desc' ? '↓' : '↑';
+  });
+}
+
+// ── XSS helper ────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Export solved to CSV ──────────────────────────────────────
+function exportProgress() {
+  const solved = QUESTIONS.filter(q => state.solvedSet.has(q.slug));
+  const header = 'ID,Title,Difficulty,Frequency,Topics,URL\n';
+  const rows = solved.map(q =>
+    `${q.id || ''},"${q.title.replace(/"/g,'""')}",${q.difficulty},${q.frequency},"${q.topics.join('; ')}",${q.url}`
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'amazon-oa-solved.csv';
+  a.click();
+  showToast(`Exported ${solved.length} solved questions`, '📥');
+}
+
+// ── Event Listeners ───────────────────────────────────────────
+function init() {
+  state.solvedSet = loadSolved();
+  populateTopicSelect();
+
+  // Search
+  let searchTimer;
+  dom.searchInput.addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      state.search = e.target.value.trim();
+      applyFiltersAndSort();
+    }, 200);
+  });
+
+  // Difficulty chips
+  document.getElementById('diff-chips').addEventListener('click', e => {
+    const chip = e.target.closest('[data-diff]');
+    if (!chip) return;
+    const d = chip.dataset.diff;
+    chip.classList.toggle('active');
+    if (state.filters.difficulties.has(d)) state.filters.difficulties.delete(d);
+    else state.filters.difficulties.add(d);
+    applyFiltersAndSort();
+  });
+
+  // Timeframe chips
+  document.getElementById('time-chips').addEventListener('click', e => {
+    const chip = e.target.closest('[data-tf]');
+    if (!chip) return;
+    const tf = chip.dataset.tf;
+    chip.classList.toggle('active');
+    if (state.filters.timeframes.has(tf)) state.filters.timeframes.delete(tf);
+    else state.filters.timeframes.add(tf);
+    applyFiltersAndSort();
+  });
+
+  // Status chips
+  document.getElementById('status-chips').addEventListener('click', e => {
+    const chip = e.target.closest('[data-status]');
+    if (!chip) return;
+    const s = chip.dataset.status;
+    // Exclusive toggle
+    document.querySelectorAll('[data-status]').forEach(c => c.classList.remove('active'));
+    if (!state.filters.statuses.has(s)) {
+      state.filters.statuses = new Set([s]);
+      chip.classList.add('active');
+    } else {
+      state.filters.statuses.clear();
+    }
+    applyFiltersAndSort();
+  });
+
+  // Topic select
+  dom.topicSelect.addEventListener('change', e => {
+    state.filters.topic = e.target.value;
+    applyFiltersAndSort();
+  });
+
+  // Sort tabs
+  document.getElementById('sort-tabs').addEventListener('click', e => {
+    const tab = e.target.closest('[data-sort]');
+    if (!tab) return;
+    setSort(tab.dataset.sort);
+  });
+
+  // View toggle
+  document.getElementById('view-table').addEventListener('click', () => {
+    state.view = 'table';
+    document.getElementById('view-table').classList.add('active');
+    document.getElementById('view-cards').classList.remove('active');
+    renderList();
+  });
+  document.getElementById('view-cards').addEventListener('click', () => {
+    state.view = 'cards';
+    document.getElementById('view-cards').classList.add('active');
+    document.getElementById('view-table').classList.remove('active');
+    renderList();
+  });
+
+  // Clear filters
+  document.getElementById('btn-clear-filters').addEventListener('click', clearAllFilters);
+  document.getElementById('empty-clear-btn').addEventListener('click', clearAllFilters);
+
+  // Export
+  document.getElementById('btn-export').addEventListener('click', exportProgress);
+
+  // Mobile sidebar toggle
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    dom.sidebar.classList.toggle('open');
+    dom.sidebarOverlay.classList.toggle('show');
+  });
+  dom.sidebarOverlay.addEventListener('click', () => {
+    dom.sidebar.classList.remove('open');
+    dom.sidebarOverlay.classList.remove('show');
+  });
+
+  // Keyboard shortcut: '/' to focus search
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement !== dom.searchInput) {
+      e.preventDefault();
+      dom.searchInput.focus();
+    }
+    if (e.key === 'Escape') dom.searchInput.blur();
+  });
+
+  // Initial render
+  dom.loader.style.display = 'none';
+  dom.tableWrap.style.display = '';
+  updateDashboard();
+  applyFiltersAndSort();
+}
+
+function clearAllFilters() {
+  state.filters.difficulties.clear();
+  state.filters.timeframes.clear();
+  state.filters.statuses.clear();
+  state.filters.topic = '';
+  state.search = '';
+  dom.searchInput.value = '';
+  dom.topicSelect.value = '';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  applyFiltersAndSort();
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────
+if (typeof QUESTIONS !== 'undefined') {
+  init();
+} else {
+  dom.loader.innerHTML = `<span style="color:var(--accent-red)">⚠️ Error: questions.js not loaded. Open this file via a local server.</span>`;
+}
+</script>
+</body>
+</html>
